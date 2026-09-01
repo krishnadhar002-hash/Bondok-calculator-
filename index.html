@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>লাইভ বন্ধক লাভ ক্যালকুলেটর</title>
+  <title>বন্ধক লাভ হিসাব</title>
+  <link rel="manifest" href="manifest.json">
   <style>
     :root {
       --bg: #0f172a;
@@ -16,7 +17,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 16px; max-width: 480px; margin: 0 auto; }
-    .header { text-align: center; margin-bottom: 18px; }
+    .header { text-align: center; margin-bottom: 16px; }
     .header h1 { font-size: 1.4rem; color: var(--accent); }
     .header p { font-size: 0.8rem; color: var(--sub); }
     
@@ -24,8 +25,9 @@
     .form-group { margin-bottom: 12px; }
     label { display: block; font-size: 0.8rem; color: var(--sub); margin-bottom: 4px; }
     input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: #0b1120; color: #fff; font-size: 0.95rem; }
-    input:focus { outline: none; border-color: var(--accent); }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
     .result-box { background: #0b1120; border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 10px; }
     .result-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 0.9rem; }
@@ -53,67 +55,79 @@
         <input type="number" id="rate" value="3" step="0.1" oninput="calculateLive()">
       </div>
       <div class="form-group">
-        <label>হিসাবের ধরন</label>
+        <label>হিসাবের পদ্ধতি</label>
         <select id="calcMode" onchange="toggleMode()">
+          <option value="manual_date">তারিখ টাইপ করুন (দিন-মাস-বছর)</option>
+          <option value="date_picker">ক্যালেন্ডার থেকে নির্বাচন</option>
           <option value="duration">সরাসরি মাস / দিন</option>
-          <option value="date">শুরুর তারিখ থেকে আজ</option>
         </select>
       </div>
     </div>
 
-    <!-- সরাসরি মাস/দিনের ইনপুট -->
-    <div id="durationInputs" class="grid">
+    <!-- ১. ম্যানুয়াল তারিখ টাইপ করার ইনপুট -->
+    <div id="manualDateInputs" class="form-group">
+      <label>শুরুর তারিখ (টাইপ করুন)</label>
+      <div class="grid-3">
+        <input type="number" id="manualDay" placeholder="দিন (১-৩১)" min="1" max="31" oninput="calculateLive()">
+        <input type="number" id="manualMonth" placeholder="মাস (১-১২)" min="1" max="12" oninput="calculateLive()">
+        <input type="number" id="manualYear" placeholder="বছর (যেমন ২০২৫)" oninput="calculateLive()">
+      </div>
+    </div>
+
+    <!-- ২. ক্যালেন্ডার তারিখ ইনপুট -->
+    <div id="datePickerInputs" class="form-group" style="display: none;">
+      <label>শুরুর তারিখ (ক্যালেন্ডার)</label>
+      <input type="date" id="startDate" oninput="calculateLive()">
+    </div>
+
+    <!-- ৩. সরাসরি মাস/দিনের ইনপুট -->
+    <div id="durationInputs" class="grid" style="display: none;">
       <div class="form-group">
         <label>মাস</label>
         <input type="number" id="inputMonths" value="6" step="0.1" oninput="calculateLive()">
       </div>
       <div class="form-group">
-        <label>অতিরিক্ত দিন (যদি থাকে)</label>
+        <label>অতিরিক্ত দিন</label>
         <input type="number" id="inputDays" value="0" oninput="calculateLive()">
       </div>
     </div>
 
-    <!-- তারিখ অনুযায়ী ইনপুট -->
-    <div id="dateInputs" class="form-group" style="display: none;">
-      <label>বন্ধক রাখার তারিখ</label>
-      <input type="date" id="startDate" oninput="calculateLive()">
-    </div>
-
+    <!-- ফলাফল বক্স -->
     <div class="result-box">
       <div class="result-row">
         <span>মোট সময়কাল:</span>
-        <strong id="resDuration">৬ মাস (১৮০ দিন)</strong>
+        <strong id="resDuration">-</strong>
       </div>
       <div class="result-row">
         <span>প্রতি মাসের লাভ:</span>
-        <strong id="resMonthlyProfit">৳৪৫০</strong>
+        <strong id="resMonthlyProfit">৳০</strong>
       </div>
       <div class="result-row">
         <span>মোট লাভ:</span>
-        <span class="highlight-profit" id="resTotalProfit">৳২,৭০০</span>
+        <span class="highlight-profit" id="resTotalProfit">৳০</span>
       </div>
       <div class="result-row">
         <span>সর্বমোট পাওনা (আসল + লাভ):</span>
-        <span class="highlight-total" id="resTotalPayable">৳১৭,৭০০</span>
+        <span class="highlight-total" id="resTotalPayable">৳০</span>
       </div>
     </div>
   </div>
 
   <script>
-    // ডিফল্ট তারিখ: ৬ মাস আগের তারিখ
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    document.getElementById('startDate').value = sixMonthsAgo.toISOString().split('T')[0];
+    // ডিফল্ট হিসেবে ৬ মাস আগের তারিখ বসানো
+    const defaultDate = new Date();
+    defaultDate.setMonth(defaultDate.getMonth() - 6);
+
+    document.getElementById('manualDay').value = defaultDate.getDate();
+    document.getElementById('manualMonth').value = defaultDate.getMonth() + 1;
+    document.getElementById('manualYear').value = defaultDate.getFullYear();
+    document.getElementById('startDate').value = defaultDate.toISOString().split('T')[0];
 
     function toggleMode() {
       const mode = document.getElementById('calcMode').value;
-      if (mode === 'duration') {
-        document.getElementById('durationInputs').style.display = 'grid';
-        document.getElementById('dateInputs').style.display = 'none';
-      } else {
-        document.getElementById('durationInputs').style.display = 'none';
-        document.getElementById('dateInputs').style.display = 'block';
-      }
+      document.getElementById('manualDateInputs').style.display = mode === 'manual_date' ? 'block' : 'none';
+      document.getElementById('datePickerInputs').style.display = mode === 'date_picker' ? 'block' : 'none';
+      document.getElementById('durationInputs').style.display = mode === 'duration' ? 'grid' : 'none';
       calculateLive();
     }
 
@@ -124,27 +138,40 @@
 
       let totalDays = 0;
       let durationText = '';
+      const today = new Date();
 
-      if (mode === 'duration') {
+      if (mode === 'manual_date') {
+        const d = parseInt(document.getElementById('manualDay').value);
+        const m = parseInt(document.getElementById('manualMonth').value) - 1;
+        const y = parseInt(document.getElementById('manualYear').value);
+
+        if (d && !isNaN(m) && y && y > 1900) {
+          const startDate = new Date(y, m, d);
+          const diff = Math.max(0, today - startDate);
+          totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const months = Math.floor(totalDays / 30);
+          const extraDays = totalDays % 30;
+          durationText = `${months} মাস ${extraDays} দিন (মোট ${totalDays} দিন)`;
+        } else {
+          durationText = 'সঠিক তারিখ লিখুন';
+        }
+      } else if (mode === 'date_picker') {
+        const startVal = document.getElementById('startDate').value;
+        if (startVal) {
+          const startDate = new Date(startVal);
+          const diff = Math.max(0, today - startDate);
+          totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const months = Math.floor(totalDays / 30);
+          const extraDays = totalDays % 30;
+          durationText = `${months} মাস ${extraDays} দিন (মোট ${totalDays} দিন)`;
+        }
+      } else if (mode === 'duration') {
         const months = parseFloat(document.getElementById('inputMonths').value) || 0;
         const days = parseFloat(document.getElementById('inputDays').value) || 0;
         totalDays = (months * 30) + days;
         durationText = `${months} মাস ${days > 0 ? days + ' দিন' : ''} (~${Math.round(totalDays)} দিন)`;
-      } else {
-        const startVal = document.getElementById('startDate').value;
-        if (!startVal) return;
-        
-        const start = new Date(startVal);
-        const today = new Date();
-        const diff = Math.max(0, today - start);
-        totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
-        
-        const m = Math.floor(totalDays / 30);
-        const d = totalDays % 30;
-        durationText = `${m} মাস ${d} দিন (মোট ${totalDays} দিন)`;
       }
 
-      // ৩০ দিনে ১ মাস হিসেবে লাভ নির্ণয়
       const monthlyProfit = principal * (rate / 100);
       const totalProfit = (monthlyProfit / 30) * totalDays;
       const totalPayable = principal + totalProfit;
@@ -153,6 +180,11 @@
       document.getElementById('resMonthlyProfit').innerText = '৳' + Math.round(monthlyProfit).toLocaleString('bn-BD');
       document.getElementById('resTotalProfit').innerText = '৳' + Math.round(totalProfit).toLocaleString('bn-BD');
       document.getElementById('resTotalPayable').innerText = '৳' + Math.round(totalPayable).toLocaleString('bn-BD');
+    }
+
+    // PWA Service Worker রেজিস্টার
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
     }
 
     calculateLive();
