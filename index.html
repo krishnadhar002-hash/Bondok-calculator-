@@ -3,186 +3,159 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>বন্ধক হিসাব</title>
+  <title>লাইভ বন্ধক লাভ ক্যালকুলেটর</title>
   <style>
     :root {
       --bg: #0f172a;
       --card: #1e293b;
       --text: #f8fafc;
-      --subtext: #94a3b8;
+      --sub: #94a3b8;
       --accent: #38bdf8;
-      --danger: #ef4444;
       --success: #22c55e;
       --border: #334155;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 16px; max-width: 500px; margin: 0 auto; }
+    body { background-color: var(--bg); color: var(--text); padding: 16px; max-width: 480px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 18px; }
+    .header h1 { font-size: 1.4rem; color: var(--accent); }
+    .header p { font-size: 0.8rem; color: var(--sub); }
     
-    .header { text-align: center; margin-bottom: 20px; }
-    .header h1 { font-size: 1.5rem; color: var(--accent); }
-    .header p { font-size: 0.85rem; color: var(--subtext); }
-
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
     .form-group { margin-bottom: 12px; }
-    label { display: block; font-size: 0.8rem; color: var(--subtext); margin-bottom: 4px; }
-    input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: #0b1120; color: #fff; font-size: 0.95rem; }
+    label { display: block; font-size: 0.8rem; color: var(--sub); margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: #0b1120; color: #fff; font-size: 0.95rem; }
     input:focus { outline: none; border-color: var(--accent); }
-    
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--accent); color: #0f172a; font-weight: bold; cursor: pointer; margin-top: 8px; }
-    
-    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center; }
-    .summary-box { background: #0b1120; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-    .summary-box span { font-size: 0.75rem; color: var(--subtext); display: block; }
-    .summary-box strong { font-size: 1.1rem; color: var(--accent); }
 
-    .item { background: #0b1120; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; position: relative; }
-    .item h4 { font-size: 1rem; color: var(--text); margin-bottom: 4px; }
-    .item p { font-size: 0.8rem; color: var(--subtext); margin: 2px 0; }
-    .item .calc { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; font-weight: bold; font-size: 0.9rem; }
-    .del-btn { position: absolute; top: 10px; right: 10px; background: transparent; color: var(--danger); border: none; font-size: 1rem; cursor: pointer; width: auto; padding: 0; margin: 0; }
+    .result-box { background: #0b1120; border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 10px; }
+    .result-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 0.9rem; }
+    .result-row:last-child { border-bottom: none; }
+    .highlight-profit { color: var(--accent); font-weight: bold; font-size: 1.05rem; }
+    .highlight-total { color: var(--success); font-weight: bold; font-size: 1.15rem; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>বন্ধক হিসাব খাতা</h1>
-    <p>মাসিক লাভ ও মোট পাওনার সহজ হিসাব</p>
-  </div>
-
-  <div class="card summary-grid">
-    <div class="summary-box">
-      <span>মোট মূল টাকা</span>
-      <strong id="totalPrincipal">৳০</strong>
-    </div>
-    <div class="summary-box">
-      <span>মোট পাওনা (লাভসহ)</span>
-      <strong id="totalPayable">৳০</strong>
-    </div>
+    <h1>লাইভ বন্ধক লাভ হিসাব</h1>
+    <p>তাৎক্ষণিক আসল, লাভ ও সর্বমোট পাওনা</p>
   </div>
 
   <div class="card">
-    <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--accent);">নতুন হিসাব যুক্ত করুন</h3>
-    <form id="loanForm">
-      <div class="form-group">
-        <label>গ্রাহকের নাম / বিবরণ</label>
-        <input type="text" id="name" placeholder="যেমন: রহিমের সোনার চেইন" required>
-      </div>
-      <div class="grid">
-        <div class="form-group">
-          <label>মূল টাকা (৳)</label>
-          <input type="number" id="principal" placeholder="১০০০০" required>
-        </div>
-        <div class="form-group">
-          <label>মাসিক লাভ (%)</label>
-          <input type="number" id="rate" step="0.1" value="৩" required>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>জমা দেওয়ার তারিখ</label>
-        <input type="date" id="startDate" required>
-      </div>
-      <button type="submit">+ হিসাব যুক্ত করুন</button>
-    </form>
-  </div>
+    <div class="form-group">
+      <label>মূল টাকা / আসল (৳)</label>
+      <input type="number" id="principal" value="15000" placeholder="টাকার পরিমাণ লিখুন" oninput="calculateLive()">
+    </div>
 
-  <div class="card">
-    <h3 style="font-size: 1rem; margin-bottom: 8px;">চলমান তালিকা</h3>
-    <div id="listContainer"></div>
+    <div class="grid">
+      <div class="form-group">
+        <label>মাসিক লাভের হার (%)</label>
+        <input type="number" id="rate" value="3" step="0.1" oninput="calculateLive()">
+      </div>
+      <div class="form-group">
+        <label>হিসাবের ধরন</label>
+        <select id="calcMode" onchange="toggleMode()">
+          <option value="duration">সরাসরি মাস / দিন</option>
+          <option value="date">শুরুর তারিখ থেকে আজ</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- সরাসরি মাস/দিনের ইনপুট -->
+    <div id="durationInputs" class="grid">
+      <div class="form-group">
+        <label>মাস</label>
+        <input type="number" id="inputMonths" value="6" step="0.1" oninput="calculateLive()">
+      </div>
+      <div class="form-group">
+        <label>অতিরিক্ত দিন (যদি থাকে)</label>
+        <input type="number" id="inputDays" value="0" oninput="calculateLive()">
+      </div>
+    </div>
+
+    <!-- তারিখ অনুযায়ী ইনপুট -->
+    <div id="dateInputs" class="form-group" style="display: none;">
+      <label>বন্ধক রাখার তারিখ</label>
+      <input type="date" id="startDate" oninput="calculateLive()">
+    </div>
+
+    <div class="result-box">
+      <div class="result-row">
+        <span>মোট সময়কাল:</span>
+        <strong id="resDuration">৬ মাস (১৮০ দিন)</strong>
+      </div>
+      <div class="result-row">
+        <span>প্রতি মাসের লাভ:</span>
+        <strong id="resMonthlyProfit">৳৪৫০</strong>
+      </div>
+      <div class="result-row">
+        <span>মোট লাভ:</span>
+        <span class="highlight-profit" id="resTotalProfit">৳২,৭০০</span>
+      </div>
+      <div class="result-row">
+        <span>সর্বমোট পাওনা (আসল + লাভ):</span>
+        <span class="highlight-total" id="resTotalPayable">৳১৭,৭০০</span>
+      </div>
+    </div>
   </div>
 
   <script>
-    document.getElementById('startDate').valueAsDate = new Date();
+    // ডিফল্ট তারিখ: ৬ মাস আগের তারিখ
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    document.getElementById('startDate').value = sixMonthsAgo.toISOString().split('T')[0];
 
-    function getStorage() {
-      return JSON.parse(localStorage.getItem('bondhok_records')) || [];
+    function toggleMode() {
+      const mode = document.getElementById('calcMode').value;
+      if (mode === 'duration') {
+        document.getElementById('durationInputs').style.display = 'grid';
+        document.getElementById('dateInputs').style.display = 'none';
+      } else {
+        document.getElementById('durationInputs').style.display = 'none';
+        document.getElementById('dateInputs').style.display = 'block';
+      }
+      calculateLive();
     }
 
-    function saveStorage(data) {
-      localStorage.setItem('bondhok_records', JSON.stringify(data));
-      render();
-    }
+    function calculateLive() {
+      const principal = parseFloat(document.getElementById('principal').value) || 0;
+      const rate = parseFloat(document.getElementById('rate').value) || 0;
+      const mode = document.getElementById('calcMode').value;
 
-    function calculate(principal, rate, startDateStr) {
-      const start = new Date(startDateStr);
-      const now = new Date();
-      const diffTime = Math.max(0, now - start);
-      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      
-      // ৩০ দিনে ১ মাস হিসাব
-      const months = days / 30;
-      const profit = principal * (rate / 100) * months;
-      const total = principal + profit;
+      let totalDays = 0;
+      let durationText = '';
 
-      return {
-        days: days,
-        months: months.toFixed(1),
-        profit: Math.round(profit),
-        total: Math.round(total)
-      };
-    }
-
-    function render() {
-      const records = getStorage();
-      const container = document.getElementById('listContainer');
-      container.innerHTML = '';
-
-      let sumPrincipal = 0;
-      let sumPayable = 0;
-
-      if (records.length === 0) {
-        container.innerHTML = '<p style="font-size:0.85rem; color:var(--subtext); text-align:center; padding:10px 0;">কোনো চলমান হিসাব নেই</p>';
+      if (mode === 'duration') {
+        const months = parseFloat(document.getElementById('inputMonths').value) || 0;
+        const days = parseFloat(document.getElementById('inputDays').value) || 0;
+        totalDays = (months * 30) + days;
+        durationText = `${months} মাস ${days > 0 ? days + ' দিন' : ''} (~${Math.round(totalDays)} দিন)`;
+      } else {
+        const startVal = document.getElementById('startDate').value;
+        if (!startVal) return;
+        
+        const start = new Date(startVal);
+        const today = new Date();
+        const diff = Math.max(0, today - start);
+        totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+        
+        const m = Math.floor(totalDays / 30);
+        const d = totalDays % 30;
+        durationText = `${m} মাস ${d} দিন (মোট ${totalDays} দিন)`;
       }
 
-      records.forEach((item, index) => {
-        const cal = calculate(item.principal, item.rate, item.startDate);
-        sumPrincipal += Number(item.principal);
-        sumPayable += cal.total;
+      // ৩০ দিনে ১ মাস হিসেবে লাভ নির্ণয়
+      const monthlyProfit = principal * (rate / 100);
+      const totalProfit = (monthlyProfit / 30) * totalDays;
+      const totalPayable = principal + totalProfit;
 
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `
-          <button class="del-btn" onclick="deleteItem(${index})">✕</button>
-          <h4>${item.name}</h4>
-          <p>মূল টাকা: ৳${Number(item.principal).toLocaleString('bn-BD')} | হার: ${item.rate}%</p>
-          <p>তারিখ: ${item.startDate} (${cal.days} দিন / ~${cal.months} মাস)</p>
-          <div class="calc">
-            <span style="color: var(--accent);">লাভ: ৳${cal.profit.toLocaleString('bn-BD')}</span>
-            <span style="color: var(--success);">মোট: ৳${cal.total.toLocaleString('bn-BD')}</span>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-
-      document.getElementById('totalPrincipal').innerText = '৳' + sumPrincipal.toLocaleString('bn-BD');
-      document.getElementById('totalPayable').innerText = '৳' + sumPayable.toLocaleString('bn-BD');
+      document.getElementById('resDuration').innerText = durationText;
+      document.getElementById('resMonthlyProfit').innerText = '৳' + Math.round(monthlyProfit).toLocaleString('bn-BD');
+      document.getElementById('resTotalProfit').innerText = '৳' + Math.round(totalProfit).toLocaleString('bn-BD');
+      document.getElementById('resTotalPayable').innerText = '৳' + Math.round(totalPayable).toLocaleString('bn-BD');
     }
 
-    document.getElementById('loanForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const name = document.getElementById('name').value;
-      const principal = parseFloat(document.getElementById('principal').value);
-      const rate = parseFloat(document.getElementById('rate').value);
-      const startDate = document.getElementById('startDate').value;
-
-      const records = getStorage();
-      records.unshift({ name, principal, rate, startDate });
-      saveStorage(records);
-
-      this.reset();
-      document.getElementById('startDate').valueAsDate = new Date();
-      document.getElementById('rate').value = "3";
-    });
-
-    function deleteItem(index) {
-      if (confirm('হিসাবটি মুছে ফেলতে চান?')) {
-        const records = getStorage();
-        records.splice(index, 1);
-        saveStorage(records);
-      }
-    }
-
-    render();
+    calculateLive();
   </script>
 </body>
 </html>
